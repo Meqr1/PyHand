@@ -4,9 +4,18 @@ import json
 import pyttsx3
 import AppOpener
 import webbrowser
+import datetime
+import time
+import threading
 
 with open("./meta.json", "r") as metaFile:
     meta = json.load(metaFile)
+
+try:
+    with open("./Shedule.json", "r") as sheduleFile:
+        shedule = json.load(sheduleFile)
+except FileNotFoundError:
+    shedule = None
 
 
 def init():
@@ -49,10 +58,10 @@ def command(query: str) -> None:
         exit()
 
     elif "open" in query:
-        application = query.split()
-        indexOfOpen = application.index("open") + 1
-        application = " ".join(application[indexOfOpen:])
         try:
+            application = query.split()
+            indexOfOpen = application.index("open") + 1
+            application = " ".join(application[indexOfOpen:])
             if meta["websites"].get(application) != None:
                 webbrowser.open(meta["websites"].get(application))
                 speak(f"opening {application}")
@@ -61,6 +70,15 @@ def command(query: str) -> None:
                 speak(f"opening {application}")
         except:
             speak(f"could not open {application}")
+
+    elif "what to do now" in query:
+        if shedule != None:
+            time_array = list(shedule.keys())
+            for time in time_array:
+                if event_happened(time):
+                    continue
+                else:
+                    speak(f"as per your shedule you need to {shedule[time]}")
 
     elif "close" in query:
         application = query.split()
@@ -98,7 +116,7 @@ def command(query: str) -> None:
         speak(f"searching on duck duck go")
         webbrowser.open(URL)
 
-    elif "search" in query and "on google":
+    elif "search" in query and "on google" in query:
         search: list[str] = query.split()
         indexOfStripStart = search.index("search") + 1
         indexOfStripEnd = search.index("on")
@@ -107,8 +125,83 @@ def command(query: str) -> None:
         speak(f"searching on google")
         webbrowser.open(URL)
 
+    elif "timer for" in query:
+        querySplit = query.split()
+        indexForStart = querySplit.index("for") + 1
+        timer = " ".join(querySplit[indexForStart:])
+        parse_string_time_and_start_timer(timer)
+
     else:
         if meta["responces"].get(query) != None:
             speak(meta["responces"].get(query))
         else:
             pass
+
+
+def event_happened(target_time_str):
+    target_hour, target_minute = map(int, target_time_str.split(":"))
+
+    current_time = datetime.datetime.now().time()
+
+    target_time = datetime.time(target_hour, target_minute)
+
+    if current_time >= target_time:
+        return True
+    else:
+        return False
+
+
+def timer_thread(total_seconds, time_str):
+    speak(f"Timer started for {time_str}")
+    time.sleep(total_seconds)
+    speak(f"Timer ended for {time_str}")
+
+
+def parse_string_time_and_start_timer(time_str):
+    word_to_number = {
+        "one": 1,
+        "two": 2,
+        "three": 3,
+        "four": 4,
+        "five": 5,
+        "six": 6,
+        "seven": 7,
+        "eight": 8,
+        "nine": 9,
+        "ten": 10,
+        "eleven": 11,
+        "twelve": 12,
+        "thirteen": 13,
+        "fourteen": 14,
+        "fifteen": 15,
+        "sixteen": 16,
+        "seventeen": 17,
+        "eighteen": 18,
+        "nineteen": 19,
+        "twenty": 20,
+        "thirty": 30,
+        "forty": 40,
+        "fifty": 50,
+        "sixty": 60,
+    }
+
+    words = time_str.lower().split()
+    if "and" in words:
+        words.remove("and")
+
+    hours, minutes, seconds = 0, 0, 0
+
+    for i in range(len(words)):
+        if words[i] == "hour" or words[i] == "hours":
+            hours += word_to_number.get(words[i - 1], 0)
+        elif words[i] == "minute" or words[i] == "minutes":
+            minutes += word_to_number.get(words[i - 1], 0)
+        elif words[i] == "second" or words[i] == "seconds":
+            seconds += word_to_number.get(words[i - 1], 0)
+
+    total_seconds = hours * 3600 + minutes * 60 + seconds
+
+    timer_thread_obj = threading.Thread(
+        target=timer_thread, args=(total_seconds, time_str)
+    )
+    timer_thread_obj.start()
