@@ -40,10 +40,17 @@ def init():
             cleaned_data: str = text.replace("\n", "").replace("the ", "")
             json_object = json.loads(cleaned_data)
             query: str = json_object["text"]
-            querys = query.split("and")
-            for query in querys:
-                print(query)
-                command(query)
+            process_queries(query)
+
+        text_input = input()
+        process_queries(text_input)
+
+
+def process_queries(input: str):
+    query_list = input.split("and")
+    for individual_query in query_list:
+        print(individual_query.strip())
+        command(individual_query.strip())
 
 
 def speak(text: str) -> None:
@@ -79,6 +86,7 @@ def command(query: str) -> None:
                     continue
                 else:
                     speak(f"as per your shedule you need to {shedule[time]}")
+                    break
 
     elif "close" in query:
         application = query.split()
@@ -124,6 +132,10 @@ def command(query: str) -> None:
         URL: str = f"https://www.google.com/search?q={searchQuery}"
         speak(f"searching on google")
         webbrowser.open(URL)
+
+    elif "turn" in query and "zen" in query:
+        speak("turning on zen mode")
+        AppOpener.close("vivaldi")
 
     elif "timer for" in query:
         querySplit = query.split()

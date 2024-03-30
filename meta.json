@@ -4,7 +4,9 @@
     "chat": "https://chat.openai.com",
     "music": "https://music.youtube.com",
     "youtube": "https://youtube.com",
-    "instagram": "https://www.instagram.com"
+    "instagram": "https://www.instagram.com",
+    "python package": "https://pypi.org",
+    "node package": "https://www.npmjs.com"
   },
   "responces": {
     "who are you": "i am your friendly Assistant sir",
